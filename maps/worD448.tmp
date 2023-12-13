@@ -1,0 +1,52 @@
+[gd_scene load_steps=3 format=3 uid="uid://5qu8pqd0up78"]
+
+[ext_resource type="TileSet" uid="uid://bkamjf62euld1" path="res://maps/tiles-set.tres" id="1_6l2su"]
+[ext_resource type="PackedScene" uid="uid://b53ro3ilislf6" path="res://characters/player.tscn" id="2_6rx4k"]
+
+[node name="World" type="Node2D"]
+
+[node name="map1" type="TileMap" parent="."]
+tile_set = ExtResource("1_6l2su")
+format = 2
+layer_0/name = "background"
+layer_0/tile_data = PackedInt32Array(262144, 1, 0, 327680, 1, 0, 393216, 1, 1, 458752, 1, 2, 458753, 65537, 2, 458754, 65537, 2, 458755, 131073, 2, 393219, 131073, 1, 327683, 131073, 0, 262147, 131073, 0, 393217, 65537, 1, 393218, 65537, 1, 327682, 65537, 0, 262146, 65537, 0, 262145, 65537, 0, 327681, 65537, 0, 262143, 1, 4, 196608, 65537, 4, 196609, 65537, 4, 196610, 65537, 4, 196611, 65537, 4, 196612, 131073, 4, 131072, 65537, 3, 196607, 1, 3, 131073, 65537, 3, 131074, 65537, 3, 131075, 65537, 3, 131076, 131073, 3, 65539, 65537, 6)
+layer_1/name = "foreground"
+layer_1/enabled = true
+layer_1/modulate = Color(1, 1, 1, 1)
+layer_1/y_sort_enabled = false
+layer_1/y_sort_origin = 0
+layer_1/z_index = 0
+layer_1/tile_data = PackedInt32Array(458766, 262144, 5, 393217, 655361, 0, 327682, 720897, 2, 262144, 1, 5, 262145, 1, 5, 262146, 1, 5, 262147, 1, 5, 458756, 524289, 6, 458757, 589825, 6, 393216, 65536, 2, 327690, 589824, 1, 327691, 589824, 2, 458753, 655361, 1)
+layer_2/name = "platformer"
+layer_2/enabled = true
+layer_2/modulate = Color(1, 1, 1, 1)
+layer_2/y_sort_enabled = false
+layer_2/y_sort_origin = 0
+layer_2/z_index = 0
+layer_2/tile_data = PackedInt32Array(524288, 524288, 10, 524289, 458752, 8, 524290, 458752, 8, 524291, 458752, 8, 524292, 458752, 8, 524293, 458752, 8, 524294, 458752, 8, 524295, 458752, 8, 524296, 458752, 8, 524297, 458752, 8, 524298, 458752, 8, 524299, 458752, 8, 524300, 458752, 8, 524301, 458752, 8, 524302, 458752, 8, 524303, 458752, 8, 524304, 458752, 8, 524305, 524288, 8, 393228, 524288, 8, 393225, 524288, 10, 393227, 458752, 8, 393226, 458752, 8, 65543, 524288, 8, 65542, 458752, 8, 65541, 524288, 10, 131087, 458752, 8, 131089, 524288, 8, 131088, 458752, 8, 131086, 458752, 8, 131085, 524288, 10)
+layer_3/name = "rope"
+layer_3/enabled = true
+layer_3/modulate = Color(1, 1, 1, 1)
+layer_3/y_sort_enabled = false
+layer_3/y_sort_origin = 0
+layer_3/z_index = 0
+layer_3/tile_data = PackedInt32Array(327686, 327680, 12, 393222, 327680, 12, 458758, 327680, 12, 65542, 393216, 1, 131078, 327680, 12, 196614, 327680, 12, 262150, 327680, 12, 196623, 327680, 12, 262159, 327680, 12, 327695, 327680, 12, 131087, 393216, 1)
+
+[node name="CharacterBody2D" parent="." instance=ExtResource("2_6rx4k")]
+position = Vector2(525, 426)
+
+[node name="Camera2D" type="Camera2D" parent="CharacterBody2D"]
+limit_left = 0
+limit_top = -200
+limit_right = 1600
+limit_bottom = 1000
+limit_smoothed = true
+position_smoothing_enabled = true
+drag_horizontal_enabled = true
+drag_vertical_enabled = true
+drag_left_margin = 0.3
+drag_top_margin = 0.3
+drag_right_margin = 0.3
+drag_bottom_margin = 0.3
+editor_draw_limits = true
+editor_draw_drag_margin = true
