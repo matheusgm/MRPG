@@ -73,13 +73,13 @@ func air_physics_process(delta, dir_hori, dir_vert):
 	if is_on_floor():
 		state = States.FLOOR
 		return
-#	elif can_climb and $RayClimb.is_colliding() and direction_vert == -1:
-#		state = States.CLIMBING
-#		velocity.x = 0.0
-#		if $RayClimb.is_colliding():
-#			var tile_map:TileMap = $RayClimb.get_collider()
-#			position.x = tile_map.map_to_local(tile_map.local_to_map($RayClimb.get_collision_point())).x
-#		return
+	elif $RayClimb.is_colliding() and dir_vert == -1:
+		state = States.CLIMBING
+		velocity.x = 0.0
+		if $RayClimb.is_colliding():
+			var tile_map:TileMap = $RayClimb.get_collider()
+			position.x = tile_map.map_to_local(tile_map.local_to_map($RayClimb.get_collision_point())).x
+		return
 	
 	velocity.y += gravity * delta
 	
@@ -94,11 +94,11 @@ func climbing_physics_process(_delta, dir_hori, dir_vert):
 		if (not $RayClimb.is_colliding()) or is_on_floor():
 			state = States.FLOOR
 			return
-#	elif Input.is_action_just_pressed("jump") and direction_hori:
-#		velocity.y = JUMP_VELOCITY/2
-#		velocity.x = direction_hori * speed
-#		state = States.AIR
-#		return
+	elif Input.is_action_just_pressed("jump") and dir_hori:
+		velocity.y = JUMP_VELOCITY/2
+		velocity.x = dir_hori * speed
+		state = States.AIR
+		return
 
 	velocity.y = dir_vert * speed/2
 	
