@@ -3,9 +3,9 @@ extends CharacterBody2D
 enum States {FLOOR, AIR, CLIMBING}
 @export var speed : float = 300.0
 const JUMP_VELOCITY = -600.0
-var can_climb : bool = false
 var is_duck : bool = false
 var state: States = States.AIR
+var original_target_position
 
 @onready var animation_tree : AnimationTree = $AnimationTree
 
@@ -14,12 +14,15 @@ var gravity = ProjectSettings.get_setting("physics/2d/default_gravity")
 
 func _ready():
 	animation_tree.active = true
+	original_target_position = $RayClimb.target_position
+	$RayDown.position.y += 70 # Tamanho do Tile
 	
 func _process(_delta):
 	update_animation_parameters()
 
 func _draw():
 #	draw_line($RayClimb.position, ($RayClimb.position+$RayClimb.target_position)*1,Color(255,0,0),4)
+#	draw_line($RayDown.position, ($RayDown.position+$RayDown.target_position)*1,Color(255,0,0),4)
 	pass
 
 func _physics_process(delta):
@@ -40,6 +43,7 @@ func floor_physics_process(_delta, dir_hori, dir_vert):
 		state = States.AIR
 		return
 	elif dir_vert != 0:
+		$RayClimb.target_position.y = original_target_position.y + 1
 		if $RayClimb.is_colliding():
 			var tile_map:TileMap = $RayClimb.get_collider()
 			var point = tile_map.local_to_map($RayClimb.get_collision_point())
@@ -52,13 +56,18 @@ func floor_physics_process(_delta, dir_hori, dir_vert):
 					position.x = tile_map.map_to_local(point).x
 					position.y += 16.0 * dir_vert;
 					return
+		
 	#	# Handle Jump.
 	if Input.is_action_just_pressed("jump"):
 		if dir_vert == 1:
-			pass
+			if $RayDown.is_colliding() and dir_hori == 0:
+				position.y += 10.0 * dir_vert;
+				state = States.AIR
+				return
 		else:
 			velocity.y = JUMP_VELOCITY
 			state = States.AIR
+			return
 		
 	if dir_hori:
 		velocity.x = dir_hori * speed
@@ -91,7 +100,9 @@ func air_physics_process(delta, dir_hori, dir_vert):
 	
 func climbing_physics_process(_delta, dir_hori, dir_vert):
 	if dir_vert != 0:
+		$RayClimb.target_position.y = original_target_position.y
 		if (not $RayClimb.is_colliding()) or is_on_floor():
+			velocity.y = 0.0
 			state = States.FLOOR
 			return
 	elif Input.is_action_just_pressed("jump") and dir_hori:

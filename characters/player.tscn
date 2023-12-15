@@ -918,6 +918,11 @@ parameters/Walk/blend_position = Vector2(0, 0)
 
 [node name="RayClimb" type="RayCast2D" parent="."]
 position = Vector2(0, 20)
-target_position = Vector2(0, 30)
+target_position = Vector2(0, 29)
 collision_mask = 4
 hit_from_inside = true
+
+[node name="RayDown" type="RayCast2D" parent="."]
+position = Vector2(0, 49)
+target_position = Vector2(0, 300)
+collision_mask = 2
