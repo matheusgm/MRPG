@@ -3,9 +3,10 @@ extends CharacterBody2D
 enum States {FLOOR, AIR, CLIMBING}
 @export var speed : float = 300.0
 const JUMP_VELOCITY = -600.0
-var is_duck : bool = false
 var state: States = States.AIR
+var is_duck: bool = false
 var original_target_position
+var state_machine
 
 @onready var animation_tree : AnimationTree = $AnimationTree
 
@@ -14,6 +15,7 @@ var gravity = ProjectSettings.get_setting("physics/2d/default_gravity")
 
 func _ready():
 	animation_tree.active = true
+	state_machine = $AnimationTree.get('parameters/playback')
 	original_target_position = $RayClimb.target_position
 	$RayDown.position.y += 70 # Tamanho do Tile
 	
@@ -51,31 +53,35 @@ func floor_physics_process(_delta, dir_hori, dir_vert):
 			if cell:
 				var data = cell.get_custom_data("name")
 				if (dir_vert == 1 and data == "ROPE_TOP") or (dir_vert == -1 and data == "ROPE"):
+					if is_duck: is_duck = false
 					state = States.CLIMBING
 					velocity.x = 0.0
 					position.x = tile_map.map_to_local(point).x
 					position.y += 16.0 * dir_vert;
 					return
+	
+	is_duck = dir_vert == 1
 		
 	#	# Handle Jump.
 	if Input.is_action_just_pressed("jump"):
 		if dir_vert == 1:
 			if $RayDown.is_colliding() and dir_hori == 0:
 				position.y += 10.0 * dir_vert;
+				if is_duck: is_duck = false
 				state = States.AIR
 				return
 		else:
+			if is_duck: is_duck = false
 			velocity.y = JUMP_VELOCITY
 			state = States.AIR
 			return
 		
 	if dir_hori:
+		if is_duck: is_duck = false
 		velocity.x = dir_hori * speed
 		$Sprite2D.scale.x = dir_hori
 	else:
 		velocity.x =  move_toward(velocity.x, 0, speed)
-		
-#	is_duck = direction_vert == 1 and direction_hori == 0
 	
 func air_physics_process(delta, dir_hori, dir_vert):
 	# Add the gravity.
@@ -85,9 +91,8 @@ func air_physics_process(delta, dir_hori, dir_vert):
 	elif $RayClimb.is_colliding() and dir_vert == -1:
 		state = States.CLIMBING
 		velocity.x = 0.0
-		if $RayClimb.is_colliding():
-			var tile_map:TileMap = $RayClimb.get_collider()
-			position.x = tile_map.map_to_local(tile_map.local_to_map($RayClimb.get_collision_point())).x
+		var tile_map:TileMap = $RayClimb.get_collider()
+		position.x = tile_map.map_to_local(tile_map.local_to_map($RayClimb.get_collision_point())).x
 		return
 	
 	velocity.y += gravity * delta
@@ -112,42 +117,21 @@ func climbing_physics_process(_delta, dir_hori, dir_vert):
 		return
 
 	velocity.y = dir_vert * speed/2
-	
-	
-	
+
 func update_animation_parameters():
-#	match state:
-#		States.AIR: # Está no Ar
-##			animation_tree.process_mode = Node.PROCESS_MODE_INHERIT
-#			animation_tree["parameters/conditions/is_idle"] = false
-#			animation_tree["parameters/conditions/is_walking"] = false
-#			animation_tree["parameters/conditions/is_jump"] = true
-#			animation_tree["parameters/conditions/is_climb"] = false
-#			animation_tree["parameters/conditions/is_duck"] = false
-#		States.FLOOR: # Está no chão
-##			animation_tree.process_mode = Node.PROCESS_MODE_INHERIT
-#			animation_tree["parameters/conditions/is_jump"] = false
-#			animation_tree["parameters/conditions/is_climb"] = false
-#			if velocity.x != 0.0: # Em movimento no chão
-#				animation_tree["parameters/conditions/is_idle"] = false
-#				animation_tree["parameters/conditions/is_walking"] = true
-#				animation_tree["parameters/conditions/is_duck"] = false
-#			else: # Parado no chão
-#				animation_tree["parameters/conditions/is_walking"] = false
-#				if is_duck and not can_climb:
-#					animation_tree["parameters/conditions/is_duck"] = true
-#					animation_tree["parameters/conditions/is_idle"] = false
-#				else:
-#					animation_tree["parameters/conditions/is_idle"] = true
-#					animation_tree["parameters/conditions/is_duck"] = false
-#		States.CLIMBING: # Está numa corta ou escada
-#			animation_tree["parameters/conditions/is_climb"] = true
-##			if velocity.normalized().y != 0.0:
-##				animation_tree.process_mode = Node.PROCESS_MODE_INHERIT
-##			else:
-##				animation_tree.process_mode = Node.PROCESS_MODE_DISABLED
-#			animation_tree["parameters/conditions/is_idle"] = false
-#			animation_tree["parameters/conditions/is_walking"] = false
-#			animation_tree["parameters/conditions/is_jump"] = false
-#			animation_tree["parameters/conditions/is_duck"] = false
+	match state:
+		States.AIR: # Está no Ar
+			state_machine.travel('Jump')
+		States.FLOOR: # Está no chão
+			if velocity.x != 0.0: # Em movimento no chão
+				state_machine.travel('Walk')
+			else: # Parado no chão
+				if is_duck:
+					state_machine.travel('Duck')
+				else:
+					state_machine.travel('Idle')
+		States.CLIMBING: # Está numa corta ou escada
+			state_machine.travel('Climb')
+			if velocity.normalized().y == 0.0:
+				state_machine.stop()
 	pass
