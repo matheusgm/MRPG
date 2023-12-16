@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://5qu8pqd0up78"]
+[gd_scene load_steps=4 format=3 uid="uid://5qu8pqd0up78"]
 
 [ext_resource type="TileSet" uid="uid://bkamjf62euld1" path="res://maps/tiles-set.tres" id="1_6l2su"]
 [ext_resource type="PackedScene" uid="uid://b53ro3ilislf6" path="res://characters/player.tscn" id="2_6rx4k"]
+[ext_resource type="PackedScene" uid="uid://bx7mvc1xjkqfw" path="res://enemy.tscn" id="3_tec2d"]
 
 [node name="World" type="Node2D"]
 
@@ -50,3 +51,6 @@ drag_right_margin = 0.3
 drag_bottom_margin = 0.3
 editor_draw_limits = true
 editor_draw_drag_margin = true
+
+[node name="Enemy" parent="." instance=ExtResource("3_tec2d")]
+position = Vector2(1223, 122)
