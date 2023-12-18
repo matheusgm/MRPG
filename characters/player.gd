@@ -1,12 +1,14 @@
 extends CharacterBody2D
 
-enum States {FLOOR, AIR, CLIMBING}
+enum States {FLOOR, AIR, CLIMBING, ATTACKING}
 @export var speed : float = 300.0
 const JUMP_VELOCITY = -600.0
 var state: States = States.AIR
 var is_duck: bool = false
 var original_target_position
 var state_machine
+var look_at = Vector2(1,0)
+var can_attack = true
 
 @onready var animation_tree : AnimationTree = $AnimationTree
 
@@ -30,17 +32,22 @@ func _draw():
 func _physics_process(delta):
 	var dir_hori = Input.get_axis("left", "right")
 	var dir_vert = Input.get_axis("up", "down")
+	if dir_hori != 0 and look_at.x != dir_hori:
+		if state != States.ATTACKING:
+			look_at = Vector2(dir_hori, 0)
 	match state:
 		States.FLOOR:
-			floor_physics_process(delta, dir_hori, dir_vert)
+			floor_state(delta, dir_hori, dir_vert)
 		States.AIR:
-			air_physics_process(delta, dir_hori, dir_vert)
+			air_state(delta, dir_hori, dir_vert)
 		States.CLIMBING:
-			climbing_physics_process(delta, dir_hori, dir_vert)
+			climbing_state(delta, dir_hori, dir_vert)
+		States.ATTACKING:
+			attacking_state(delta, dir_hori, dir_vert)
 		
 	move_and_slide()
 
-func floor_physics_process(_delta, dir_hori, dir_vert):
+func floor_state(_delta, dir_hori, dir_vert):
 	if not is_on_floor():
 		state = States.AIR
 		return
@@ -75,16 +82,20 @@ func floor_physics_process(_delta, dir_hori, dir_vert):
 			velocity.y = JUMP_VELOCITY
 			state = States.AIR
 			return
+	elif Input.is_action_just_pressed("attack") and can_attack:
+		$TimerAttack.start(0.5)
+		can_attack = false
+		state = States.ATTACKING
+		velocity = Vector2.ZERO
+		return
 		
 	if dir_hori:
 		if is_duck: is_duck = false
 		velocity.x = dir_hori * speed
-		$Sprite2D.scale.x = dir_hori
 	else:
 		velocity.x =  move_toward(velocity.x, 0, speed)
 	
-func air_physics_process(delta, dir_hori, dir_vert):
-	# Add the gravity.
+func air_state(delta, dir_hori, dir_vert):
 	if is_on_floor():
 		state = States.FLOOR
 		return
@@ -94,16 +105,21 @@ func air_physics_process(delta, dir_hori, dir_vert):
 		var tile_map:TileMap = $RayClimb.get_collider()
 		position.x = tile_map.map_to_local(tile_map.local_to_map($RayClimb.get_collision_point())).x
 		return
+		
+	if Input.is_action_just_pressed("attack") and can_attack:
+		$TimerAttack.start(0.4)
+		can_attack = false
+		state = States.ATTACKING
+		return
 	
 	velocity.y += gravity * delta
 	
 	if dir_hori:
 		velocity.x = dir_hori * speed
-		$Sprite2D.scale.x = dir_hori
 	else:
 		velocity.x =  move_toward(velocity.x, 0, speed)
 	
-func climbing_physics_process(_delta, dir_hori, dir_vert):
+func climbing_state(_delta, dir_hori, dir_vert):
 	if dir_vert != 0:
 		$RayClimb.target_position.y = original_target_position.y
 		if (not $RayClimb.is_colliding()) or is_on_floor():
@@ -118,20 +134,41 @@ func climbing_physics_process(_delta, dir_hori, dir_vert):
 
 	velocity.y = dir_vert * speed/2
 
+func attacking_state(delta, _dir_hori, _dir_vert):
+	if not is_on_floor():
+		velocity.y += gravity * delta
+
 func update_animation_parameters():
 	match state:
 		States.AIR: # Está no Ar
 			state_machine.travel('Jump')
+			animation_tree["parameters/Jump/blend_position"] = look_at.normalized()
 		States.FLOOR: # Está no chão
 			if velocity.x != 0.0: # Em movimento no chão
 				state_machine.travel('Walk')
+				animation_tree["parameters/Walk/blend_position"] = look_at.normalized()
 			else: # Parado no chão
 				if is_duck:
 					state_machine.travel('Duck')
+					animation_tree["parameters/Duck/blend_position"] = look_at.normalized()
 				else:
 					state_machine.travel('Idle')
+					animation_tree["parameters/Idle/blend_position"] = look_at.normalized()
 		States.CLIMBING: # Está numa corta ou escada
 			state_machine.travel('Climb')
 			if velocity.normalized().y == 0.0:
 				state_machine.stop()
+		States.ATTACKING: # Está atacando
+			state_machine.travel('Attack')
+			animation_tree["parameters/Attack/blend_position"] = look_at.normalized()
+	pass
+
+func attack_animation_finished():
+	if is_on_floor():
+		state = States.FLOOR
+	else:
+		state = States.AIR
+
+func _on_timer_attack_timeout():
+	can_attack = true
 	pass
