@@ -9,7 +9,6 @@ var original_target_position
 var state_machine
 var look_at = Vector2(1,0)
 var can_attack = true
-var tile_map:TileMap = null
 
 @onready var animation_tree : AnimationTree = $AnimationTree
 
@@ -52,6 +51,7 @@ func floor_state(_delta, dir_hori, dir_vert):
 	if not is_on_floor():
 		state = States.AIR
 		return
+	# Handle Climbing Up or Climbing Down
 	elif dir_vert != 0:
 		$RayClimb.target_position.y = original_target_position.y + 1
 		if $RayClimb.is_colliding():
@@ -60,87 +60,94 @@ func floor_state(_delta, dir_hori, dir_vert):
 			var cell = tile_map.get_cell_tile_data(3, point)
 			if cell:
 				var data = cell.get_custom_data("name")
+				# Verify if it is on Top or Bottom
 				if (dir_vert == 1 and data == "ROPE_TOP") or (dir_vert == -1 and data == "ROPE"):
-					if is_duck: is_duck = false
 					state = States.CLIMBING
 					velocity.x = 0.0
 					position.x = tile_map.map_to_local(point).x
 					position.y += 16.0 * dir_vert;
 					return
-	
-	is_duck = dir_vert == 1
-		
-	#	# Handle Jump.
+
+	# Handle Jump.
 	if Input.is_action_just_pressed("jump"):
+		# Jump Down
 		if dir_vert == 1:
 			if $RayDown.is_colliding() and dir_hori == 0:
 				position.y += 10.0 * dir_vert;
-				if is_duck: is_duck = false
 				state = States.AIR
 				return
-		else:
-			if is_duck: is_duck = false
+		# Jump Up
+		else: 
 			velocity.y = JUMP_VELOCITY
 			state = States.AIR
 			return
+	# Handle Attack
 	elif Input.is_action_just_pressed("attack") and can_attack:
 		$TimerAttack.start(0.5)
 		can_attack = false
 		state = States.ATTACKING
 		velocity = Vector2.ZERO
 		return
-		
+	
+	# Handle Left/Right Walk
 	if dir_hori:
-		if is_duck: is_duck = false
 		velocity.x = dir_hori * SPEED
+	# Handle Idle
 	else:
 		velocity.x =  move_toward(velocity.x, 0, SPEED)
+		# Handle Duck
+		is_duck = dir_vert == 1
 	
 func air_state(delta, dir_hori, dir_vert):
 	if is_on_floor():
 		state = States.FLOOR
 		return
+	# Handle Climbing
 	elif $RayClimb.is_colliding() and dir_vert == -1:
 		state = States.CLIMBING
 		velocity.x = 0.0
 		var tile_map:TileMap = $RayClimb.get_collider()
 		position.x = tile_map.map_to_local(tile_map.local_to_map($RayClimb.get_collision_point())).x
 		return
-		
+	
+	# Handle Attack
 	if Input.is_action_just_pressed("attack") and can_attack:
 		$TimerAttack.start(0.3)
 		can_attack = false
 		state = States.ATTACKING
 		return
 	
-	velocity.y += gravity * delta
-	
+	# Handle Left/Right Walk
 	if dir_hori:
 		velocity.x = dir_hori * SPEED
 	else:
 		velocity.x =  move_toward(velocity.x, 0, SPEED)
+	
+	# Handle Gravity
+	velocity.y += gravity * delta
 
 func climbing_state(_delta, dir_hori, dir_vert):
+	# Handle Top or Bottom
 	if dir_vert != 0:
 		$RayClimb.target_position.y = original_target_position.y
+		# Arrived on Top
 		if (not $RayClimb.is_colliding()):
-			var point = tile_map.map_to_local(tile_map.local_to_map($RayClimb.get_collision_point()))
 			velocity.y = 0.0
-			position.y = point.y - (tile_map.tile_set.tile_size.y/2) - floor($Sprite2D.get_rect().size.y/2)
-			state = States.FLOOR
-			tile_map = null
-			return
-		else:
-			tile_map = $RayClimb.get_collider()
-		if is_on_floor():
+			position.y = $RayClimb.get_collision_point().y - floor($Sprite2D.get_rect().size.y/2)
 			state = States.FLOOR
 			return
+		# Arrived on Bottom
+		elif is_on_floor():
+			state = States.FLOOR
+			return
+	# Handle Jump Off
 	elif Input.is_action_just_pressed("jump") and dir_hori:
 		velocity.y = JUMP_VELOCITY/2
 		velocity.x = dir_hori * SPEED
 		state = States.AIR
 		return
-
+	
+	# Handle Climbing Up, Climbing Down or Stop
 	velocity.y = dir_vert * SPEED/2
 
 func attacking_state(delta, _dir_hori, _dir_vert):
