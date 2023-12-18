@@ -1,7 +1,7 @@
 extends CharacterBody2D
 
 enum States {FLOOR, AIR, CLIMBING, ATTACKING}
-@export var speed : float = 300.0
+const SPEED = 300.0
 const JUMP_VELOCITY = -600.0
 var state: States = States.AIR
 var is_duck: bool = false
@@ -91,9 +91,9 @@ func floor_state(_delta, dir_hori, dir_vert):
 		
 	if dir_hori:
 		if is_duck: is_duck = false
-		velocity.x = dir_hori * speed
+		velocity.x = dir_hori * SPEED
 	else:
-		velocity.x =  move_toward(velocity.x, 0, speed)
+		velocity.x =  move_toward(velocity.x, 0, SPEED)
 	
 func air_state(delta, dir_hori, dir_vert):
 	if is_on_floor():
@@ -107,7 +107,7 @@ func air_state(delta, dir_hori, dir_vert):
 		return
 		
 	if Input.is_action_just_pressed("attack") and can_attack:
-		$TimerAttack.start(0.4)
+		$TimerAttack.start(0.3)
 		can_attack = false
 		state = States.ATTACKING
 		return
@@ -115,9 +115,9 @@ func air_state(delta, dir_hori, dir_vert):
 	velocity.y += gravity * delta
 	
 	if dir_hori:
-		velocity.x = dir_hori * speed
+		velocity.x = dir_hori * SPEED
 	else:
-		velocity.x =  move_toward(velocity.x, 0, speed)
+		velocity.x =  move_toward(velocity.x, 0, SPEED)
 	
 func climbing_state(_delta, dir_hori, dir_vert):
 	if dir_vert != 0:
@@ -128,11 +128,11 @@ func climbing_state(_delta, dir_hori, dir_vert):
 			return
 	elif Input.is_action_just_pressed("jump") and dir_hori:
 		velocity.y = JUMP_VELOCITY/2
-		velocity.x = dir_hori * speed
+		velocity.x = dir_hori * SPEED
 		state = States.AIR
 		return
 
-	velocity.y = dir_vert * speed/2
+	velocity.y = dir_vert * SPEED/2
 
 func attacking_state(delta, _dir_hori, _dir_vert):
 	if not is_on_floor():
@@ -171,4 +171,3 @@ func attack_animation_finished():
 
 func _on_timer_attack_timeout():
 	can_attack = true
-	pass
