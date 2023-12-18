@@ -9,6 +9,7 @@ var original_target_position
 var state_machine
 var look_at = Vector2(1,0)
 var can_attack = true
+var tile_map:TileMap = null
 
 @onready var animation_tree : AnimationTree = $AnimationTree
 
@@ -17,7 +18,7 @@ var gravity = ProjectSettings.get_setting("physics/2d/default_gravity")
 
 func _ready():
 	animation_tree.active = true
-	state_machine = $AnimationTree.get('parameters/playback')
+	state_machine = animation_tree.get('parameters/playback')
 	original_target_position = $RayClimb.target_position
 	$RayDown.position.y += 70 # Tamanho do Tile
 	
@@ -118,12 +119,20 @@ func air_state(delta, dir_hori, dir_vert):
 		velocity.x = dir_hori * SPEED
 	else:
 		velocity.x =  move_toward(velocity.x, 0, SPEED)
-	
+
 func climbing_state(_delta, dir_hori, dir_vert):
 	if dir_vert != 0:
 		$RayClimb.target_position.y = original_target_position.y
-		if (not $RayClimb.is_colliding()) or is_on_floor():
+		if (not $RayClimb.is_colliding()):
+			var point = tile_map.map_to_local(tile_map.local_to_map($RayClimb.get_collision_point()))
 			velocity.y = 0.0
+			position.y = point.y - (tile_map.tile_set.tile_size.y/2) - floor($Sprite2D.get_rect().size.y/2)
+			state = States.FLOOR
+			tile_map = null
+			return
+		else:
+			tile_map = $RayClimb.get_collider()
+		if is_on_floor():
 			state = States.FLOOR
 			return
 	elif Input.is_action_just_pressed("jump") and dir_hori:

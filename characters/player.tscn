@@ -502,7 +502,7 @@ tracks/4/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 1,
-"values": [86.0]
+"values": [84.0]
 }
 tracks/5/type = "value"
 tracks/5/imported = false
@@ -2037,7 +2037,7 @@ states/Swim/position = Vector2(708, 0)
 states/Walk/node = SubResource("AnimationNodeBlendSpace2D_w124v")
 states/Walk/position = Vector2(496, 100)
 transitions = ["Start", "Idle", SubResource("AnimationNodeStateMachineTransition_0t2nc"), "Idle", "Walk", SubResource("AnimationNodeStateMachineTransition_h5snq"), "Walk", "Idle", SubResource("AnimationNodeStateMachineTransition_q4hgb"), "Idle", "Duck", SubResource("AnimationNodeStateMachineTransition_4mhlr"), "Duck", "Idle", SubResource("AnimationNodeStateMachineTransition_e6653"), "Idle", "Jump", SubResource("AnimationNodeStateMachineTransition_wqvj6"), "Jump", "Idle", SubResource("AnimationNodeStateMachineTransition_3a37g"), "Jump", "Climb", SubResource("AnimationNodeStateMachineTransition_levo1"), "Climb", "Jump", SubResource("AnimationNodeStateMachineTransition_3hqrr"), "Walk", "Climb", SubResource("AnimationNodeStateMachineTransition_tg7ri"), "Climb", "Walk", SubResource("AnimationNodeStateMachineTransition_r7jdc"), "Jump", "Walk", SubResource("AnimationNodeStateMachineTransition_bahk6"), "Walk", "Jump", SubResource("AnimationNodeStateMachineTransition_3fp4f"), "Climb", "Idle", SubResource("AnimationNodeStateMachineTransition_fxv7d"), "Idle", "Climb", SubResource("AnimationNodeStateMachineTransition_asv5q"), "Idle", "Attack", SubResource("AnimationNodeStateMachineTransition_4rjob"), "Attack", "Idle", SubResource("AnimationNodeStateMachineTransition_cqpmo"), "Walk", "Attack", SubResource("AnimationNodeStateMachineTransition_vfenk")]
-graph_offset = Vector2(-204, -28.8484)
+graph_offset = Vector2(-553, -70.8484)
 
 [node name="CharacterBody2D" type="CharacterBody2D"]
 collision_mask = 2
